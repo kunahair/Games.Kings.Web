@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Special Friends Kings Cup</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet" href="./style.css" >
+    </head>
+
+    <body>
+        <div class="container-fluid">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <a class="navbar-brand" href="#">Special Friends Kings Cup</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </nav>
+            <div id="header" class="row">
+
+            </div>
+
+            <div id="body" class="row">
+                <div class="col-sm-12">
+                    <div class="jumbotron">
+                        <h1 class="display-4">G'Day!</h1>
+                        <p class="lead">Welcome to Special Friends Kings Cup, Remote Edition</p>
+                        <p>
+                            <label>Name</label>
+                            <input type="text" class="form-control" id="playerName" placeholder="John" />
+                        </p>
+                        <hr class="my-4">
+                        <p>Start a new Game of Kings Cup</p>
+                        <p class="lead">
+                            <a id="newGameButton" class="btn btn-primary btn-lg" href="#" role="button">New Game</a>
+                        </p>
+                        <hr class="my-4">
+                        <p>
+                            <p>Enter a Game of Kings Cup</p>
+                            <div class="form-group">
+                                <label>Room ID</label>
+                                <input type="text" size="4" maxlength="4" class="form-control" id="roomIdText" placeholder="1234" />
+                            </div>
+                            <a id="roomButton" class="btn btn-primary btn-lg" href="#" role="button">Go to Room</a>
+                        </p>
+                        <hr class="my-4">
+                        <p>
+                            <p>If your current session is valid, you can rejoin your last game</p>
+                            <a id="resumeGameButton" class="btn btn-primary btn-lg" href="#" role="button">Resume Game</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="footer" class="row">
+
+            </div>
+        </div>
+
+        <script>
+            $(document).ready(function() {
+                // window.setTimeout(function(){
+                //    $.get("http://localhost") 
+                // }, 3000)
+
+                var playerName = window.localStorage.getItem("name");
+                if (playerName != undefined || playerName != null) {
+                    $("#playerName").val(playerName);
+                }
+
+                $('#newGameButton').click(function(event) {
+                    newGame();
+                });
+
+                $('#roomButton').click(function(event) {
+                    enterGame();
+                });
+
+                $('#resumeGameButton').click(function(event) {
+                    window.location.replace("/game.html");
+                });
+
+            });
+
+            newGame = function() {
+                $.post("https://kings.specialfriends.chat/api/games", null, function(data, status) {
+                    console.log(data);
+                    window.localStorage.setItem("room_id", data.room_id);
+                    $("#roomIdText").val(data.room_id);
+                    enterGame();
+                    // window.location.replace("/game.html");
+                });
+            }
+
+            enterGame = function() {
+                var roomId = $("#roomIdText").val();
+                var playerName = $("#playerName").val();
+                var url = "https://kings.specialfriends.chat/api/games/" + roomId + "/players";
+
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: JSON.stringify({name: playerName}),
+                    contentType: "application/json",
+                    dataType: "json",
+                    success: function(data, status) {
+                        console.log(data);
+                        window.localStorage.setItem("room_id", roomId);
+                        window.localStorage.setItem("name", playerName);
+                        window.location.replace("/game.html");
+                    }
+                });
+            }
+
+        </script>
+    </body>
+</html>

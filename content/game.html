@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Special Friends Kings Cup</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <!-- BootStrap -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script> -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+        <link rel="stylesheet" href="./style.css" >
+    </head>
+
+    <body style="overflow-x: hidden;">
+        <div class="container-fluid">
+
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <a class="navbar-brand" href="#">Special Friends Kings Cup</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </nav>
+
+            <div class="row">
+                <div class="col-sm-11 offset-sm-10" style="margin-top: 10px; margin-bottom: 10px;">
+                    <a id="homeButton" class="btn btn-primary btn-lg" href="#" role="button">Home</a>
+                </div>
+                
+            </div>
+
+            <div id="game-over-modal" class="modal" style="display: none;" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Game Over</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>All the Kings are drawn<br />GAME OVER</p>
+                    </div>
+                    <div class="modal-footer">
+                        <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+                        <button id="home-modal-button" type="button" class="btn btn-primary" data-dismiss="modal">Home</button>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="body" class="row">
+
+                <div class="col-sm-12">
+                    <div class="jumbotron">
+                        <h5 style="text-align: right;">Room ID: <text id="roomIdText"></text></h5>
+                        <hr class="my-4">
+
+                        <h2>Current Player <br /><text id="currentPlayerName"></text></h2>
+                        <hr class="my-4">
+
+                        <!-- Table -->
+                        <div id="current-table" style="width: 226; height: 314; text-align: center; margin: 0 auto;">
+                            <h4>Cards Remaining: <text id="cards-remaining-text"></text></h4>
+                            <h4>Kings Remaining: <text id="kings-remaining-text"></text></h4>
+                            <h3>Current Card</h3>
+                            <img id="current-table-card" src="https://cards.specialfriends.chat/static/img/KD.png" />
+                            <br />
+                            <p>
+                                <h3>Rule: <text id="rule-text"></text></h3>
+                            </p>
+                        </div>
+
+                        <!-- Player Turn -->
+                        <div id="playerTurn">
+                            <h3>Your Turn</h3>
+                            <a id="playerTurnButton" class="btn btn-primary btn-lg" href="#" role="button">Draw</a>
+                        </div>
+
+                        <p>
+                            <p style="text-align: right;" class="lead">Next Player -> <text id="nextPlayerName"></text></p>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- <div id="footer" style="position: absolute; bottom: 0; width: 100%; height: 10%; background-color: brown;" class="row">
+                <h3>Held Cards</h3>
+                
+            </div> -->
+        </div>
+
+        <script>
+            $(document).ready(function() {
+                var roomId = window.localStorage.getItem("room_id");
+
+                $.get("https://kings.specialfriends.chat/api/games/" + roomId, function(data, status) {
+                    processGameData(data, status);
+                });
+
+                window.setInterval(function(){
+                    var roomId = window.localStorage.getItem("room_id");
+
+                    $.get("https://kings.specialfriends.chat/api/games/" + roomId, function(data, status) {
+                        processGameData(data, status);
+                    });
+                }, 3000);
+
+                $("#playerTurnButton").click(function(event) {
+                    event.preventDefault();
+                    drawCard();
+                });
+
+                $("#homeButton").click(function(event) {
+                    window.location.replace("/index.html")
+                });
+
+                $("#home-modal-button").click(function(event) {
+                    window.location.replace("/index.html")
+                });
+            });
+
+            processGameData = function(data, status) {
+                $("#currentPlayerName").text(data.state.current_player);
+                $("#nextPlayerName").text(data.state.next_player);
+                $("#rule-text").text(data.state.current_card.rule);
+                $("#roomIdText").text(data.room_id);
+
+                var playerName = window.localStorage.getItem("name");
+                if (data.state.next_player == playerName) {
+                    $("#playerTurn").css("display", "block");
+                } else {
+                    $("#playerTurn").css("display", "none");
+                }
+
+                //Change the card if needed
+                var cardSrc = $("#current-table-card").attr("src");
+                if (cardSrc != data.state.current_card.card.image) {
+                    $("#current-table-card").attr("src", data.state.current_card.card.image);
+                }
+
+                //Update Remainging Kings/Cards
+                $("#kings-remaining-text").text(data.state.remaining_kings);
+                $("#cards-remaining-text").text(data.state.remaining_cards);
+
+                //Check if the Game Over modal is to be shown
+                if (data.state.remaining_kings == 0) {
+                    $("#game-over-modal").css("display", "block");
+                }
+            }
+
+            drawCard = function() {
+                var roomId = window.localStorage.getItem("room_id");
+                var playerName = window.localStorage.getItem("name");
+                var url = "https://kings.specialfriends.chat/api/games/" + roomId + "/players/draw";
+
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: JSON.stringify({name: playerName}),
+                    contentType: "application/json",
+                    dataType: "json",
+                    success: function(data, status) {
+                        console.log(data);
+                        processGameData(data, status);
+                    }
+                });
+            }
+
+            enterGame = function() {
+                var roomId = $("#roomIdText").val();
+                var playerName = $("#playerName").val();
+                var url = "https://kings.specialfriends.chat/api/games/" + roomId + "/players";
+
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: JSON.stringify({name: playerName}),
+                    contentType: "application/json",
+                    dataType: "json",
+                    success: function(data, status) {
+                        console.log(data);
+                        window.localStorage.setItem("room_id", roomId);
+                        window.localStorage.setItem("name", playerName);
+                    }
+                });
+            }
+
+        </script>
+    </body>
+</html>
